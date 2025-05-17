@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartShop - Personalized Amazon Recommendations</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .input-focus:focus {
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+        }
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        .product-card:hover {
+            transform: scale(1.03);
+        }
+        .affiliate-disclaimer {
+            background-color: #f0f7ff;
+            border-left: 4px solid #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-6xl">
+            <!-- Affiliate Disclosure -->
+            <div class="affiliate-disclaimer p-4 mb-6 rounded-lg">
+                <p class="text-sm text-gray-700">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                    <strong>Disclosure:</strong> As an Amazon Associate, we earn from qualifying purchases. 
+                    Product prices and availability are accurate as of the date/time indicated and are subject to change.
+                </p>
+            </div>
+            
+            <!-- Customer Profile Form -->
+            <div id="profile-form" class="bg-white rounded-xl shadow-md p-6 mb-8 card-hover transition-all">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Personal Shopping Profile</h2>
+                
+                <form id="customer-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block text-gray-700 mb-2">Your Name</label>
+                        <input type="text" id="name" required
+                               class="w-full px-4 py-2 border rounded-lg input-focus transition"
+                               placeholder="John Smith">
+                    </div>
+                    
+                    <div>
+                        <label for="age" class="block text-gray-700 mb-2">Your Age</label>
+                        <input type="number" id="age" min="13" max="100" required
+                               class="w-full px-4 py-2 border rounded-lg input-focus transition"
+                               placeholder="25">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-700 mb-2">What types of products interest you?</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" name="product-type" value="Electronics" class="rounded text-indigo-600">
+                                <span>Electronics</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" name="product-type" value="Home" class="rounded text-indigo-600">
+                                <span>Home Goods</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" name="product-type" value="Fashion" class="rounded text-indigo-600">
+                                <span>Fashion</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" name="product-type" value="Beauty" class="rounded text-indigo-600">
+                                <span>Beauty</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label for="budget" class="block text-gray-700 mb-2">Your average monthly shopping budget</label>
+                        <select id="budget" required class="w-full px-4 py-2 border rounded-lg input-focus transition">
+                            <option value="">Select budget range</option>
+                            <option value="0-100">0 - 100</option>
+                            <option value="100-300">100 - 300</option>
+                            <option value="300-500">300 - 500</option>
+                            <option value="500-1000">500 - 1,000</option>
+                            <option value="1000+">1,000+</option>
+                        </select>
+                    </div>
+                    
+                    <div class="md:col-span-2 flex justify-center mt-4">
+                        <button type="submit" 
+                                class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-medium">
+                            Get Personalized Shopping Recommendations
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Personalized Recommendations (Initially Hidden) -->
+            <div id="recommendations" class="hidden bg-white rounded-xl shadow-md p-6 card-hover transition-all">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">
+                            <span id="greeting">Hello</span>, <span id="customer-name"></span>!
+                        </h2>
+                        <p class="text-gray-600">Here are your personalized recommendations</p>
+                    </div>
+                    <div class="flex items-center space-x-2 mt-3 md:mt-0">
+                        <span id="customer-age" class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm"></span>
+                        <span id="customer-budget" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"></span>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-3">Based on your interest in:</h3>
+                    <div id="product-tags" class="flex flex-wrap gap-2"></div>
+                </div>
+                
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Recommended For You</h3>
+                <div id="product-recommendations" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
+                
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Special Offers Just For You</h3>
+                <div id="special-offers" class="grid grid-cols-1 gap-4 mb-8"></div>
+                
+                <div class="text-center">
+                    <button id="reset-btn" class="text-indigo-600 hover:text-indigo-800 font-medium px-4 py-2 rounded-lg border border-indigo-200">
+                        <i class="fas fa-redo mr-2"></i>Start New Shopping Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('customer-form');
+            const profileForm = document.getElementById('profile-form');
+            const recommendations = document.getElementById('recommendations');
+            
+            // Amazon product database with referral links (replace YOUR_AFFILIATE_ID with your actual Amazon affiliate ID)
+            const products = {
+                'Electronics': [
+                    { 
+                        name: 'Apple AirPods Pro (2nd Gen)', 
+                        price: 249.00, 
+                        image: 'https://m.media-amazon.com/images/I/61SUj2aKoEL.AC_UL320.jpg',
+                        rating: 4.7,
+                        link: 'https://www.amazon.com/Apple-AirPods-Pro-2nd-Generation/dp/B0CHWKQQJ4?tag=YOUR_AFFILIATE_ID'
+                    },
+                    { 
+                        name: 'Amazon Echo Dot (5th Gen)', 
+                        price: 49.99, 
+                        image: 'https://m.media-amazon.com/images/I/51R2S1WtiDL.AC_UL320.jpg',
+                        rating: 4.6,
+                        link: 'https://www.amazon.com/Echo-Dot/dp/B09B8V1LZ3?tag=YOUR_AFFILIATE_ID'
+                    }
+                ],
+                'Home': [
+                    { 
+                        name: 'Instant Pot Duo 7-in-1 Electric Pressure Cooker', 
+                        price: 99.95, 
+                        image: 'https://m.media-amazon.com/images/I/61lJ3xlQX2L.AC_UL320.jpg',
+                        rating: 4.8,
+                        link: 'https://www.amazon.com/Instant-Pot-Duo-Electric-Stainless/dp/B01B1VC13K?tag=YOUR_AFFILIATE_ID'
+                    },
+                    { 
+                        name: 'Bissell PowerFresh Steam Mop', 
+                        price: 129.99, 
+                        image: 'https://m.media-amazon.com/images/I/71XG7+5JbHL.AC_UL320.jpg',
+                        rating: 4.5,
+                        link: 'https://www.amazon.com/Bissell-PowerFresh-Steam-Mop-Cleaner/dp/B07P5BNV4W?tag=YOUR_AFFILIATE_ID'
+                    }
+                ],
+                'Fashion': [
+                    { 
+                        name: 'Levi\'s Men\'s 501 Original Fit Jeans', 
+                        price: 69.98, 
+                        image: 'https://m.media-amazon.com/images/I/61E1K5YJtJL.AC_UL320.jpg',
+                        rating: 4.7,
+                        link: 'https://www.amazon.com/Levis-Mens-501-Original-Fit/dp/B08KWK5K5X?tag=YOUR_AFFILIATE_ID'
+                    },
+                    { 
+                        name: 'Xtore Ceramic Golden Blessing Birds', 
+                        price: 69.98, 
+                        image: 'https://m.media-amazon.com/images/I/61-WOn7PFsL._SX679_.jpg',
+                        rating: 4.7,
+                        link: 'https://www.amazon.in/Xtore-Ceramic-Blessing-Figurine-Cabinets/dp/B0BP1B78XY/ref=s9_acsd_al_ot_cv2_2_t?_encoding=UTF8&pf_rd_m=A21TJRUUN4KGV&pf_rd_s=merchandised-search-5&pf_rd_r=6YYAEK2MC9017VKKYVQ7&pf_rd_p=1750da64-0562-4816-b56a-10a345db2979&pf_rd_t=&pf_rd_i=86946701031&th=1'
+                    },
+                    { 
+                        name: 'Columbia Women\'s Arcadia II Jacket', 
+                        price: 79.99, 
+                        image: 'https://m.media-amazon.com/images/I/71P2+9H1kVL.AC_UL320.jpg',
+                        rating: 4.8,
+                        link: 'https://www.amazon.com/Columbia-Womens-Arcadia-Jacket-Black/dp/B07P5BNV4W?tag=YOUR_AFFILIATE_ID'
+                    }
+                ],
+                'Beauty': [
+                    { 
+                        name: 'CeraVe Moisturizing Cream', 
+                        price: 18.24, 
+                        image: 'https://m.media-amazon.com/images/I/61S7BrCBj7L.AC_UL320.jpg',
+                        rating: 4.8,
+                        link: 'https://www.amazon.com/CeraVe-Moisturizing-Cream-Daily-Moisturizer/dp/B00TTD9BRC?tag=YOUR_AFFILIATE_ID'
+                    },
+                    { 
+                        name: 'Revlon One-Step Hair Dryer And Volumizer', 
+                        price: 59.99, 
+                        image: 'https://m.media-amazon.com/images/I/71YHjVXyR0L.AC_UL320.jpg',
+                        rating: 4.4,
+                        link: 'https://www.amazon.com/Revlon-One-Step-Dryer-Volumizer-Ceramic/dp/B01LSUQSB0?tag=YOUR_AFFILIATE_ID'
+                    }
+                ]
+            };
+            
+            // Special offers based on budget
+            const offers = {
+                '0-100': [
+                    "Free shipping on orders over 50",
+                    "10% off your first purchase with code WELCOME10"
+                ],
+                '100-300': [
+                    "15% off when you spend 150+ with code SAVE15",
+                    "Free gift with 200+ purchase"
+                ],
+                '300-500': [
+                    "20% off your order with code VIP20",
+                    "Free premium shipping on all orders"
+                ],
+                '500-1000': [
+                    "25% off + free returns with code PREMIUM25",
+                    "Personal shopping assistant included"
+                ],
+                '1000+': [
+                    "Exclusive concierge service",
+                    "VIP early access to sales and new arrivals"
+                ]
+            };
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get form values
+                const name = document.getElementById('name').value;
+                const age = document.getElementById('age').value;
+                const budget = document.getElementById('budget').value;
+                const productTypes = Array.from(document.querySelectorAll('input[name="product-type"]:checked'))
+                                      .map(el => el.value);
+                
+                // Validate at least one interest is selected
+                if(productTypes.length === 0) {
+                    alert("Please select at least one product category");
+                    return;
+                }
+                
+                // Update profile display
+                document.getElementById('customer-name').textContent = name;
+                document.getElementById('customer-age').textContent = `${age} years`;
+                document.getElementById('customer-budget').textContent = `${budget.replace('-', ' - ')}/month`;
+                
+                // Set greeting based on time of day
+                const hour = new Date().getHours();
+                const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+                document.getElementById('greeting').textContent = greeting;
+                
+                // Display product interests
+                const productTags = document.getElementById('product-tags');
+                productTags.innerHTML = productTypes.map(type => 
+                    `<span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">${type}</span>`
+                ).join('');
+                
+                // Generate product recommendations
+                const productContainer = document.getElementById('product-recommendations');
+                productContainer.innerHTML = '';
+                
+                productTypes.forEach(type => {
+                    if(products[type]) {
+                        products[type].forEach(product => {
+                            productContainer.innerHTML += `
+                                <div class="product-card bg-white border rounded-lg overflow-hidden hover:shadow-md transition cursor-pointer">
+                                    <a href="${product.link}" target="_blank" rel="noopener noreferrer">
+                                        <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover">
+                                    </a>
+                                    <div class="p-4">
+                                        <a href="${product.link}" target="_blank" rel="noopener noreferrer" class="hover:underline">
+                                            <h4 class="font-bold mb-1">${product.name}</h4>
+                                        </a>
+                                        <div class="flex items-center mb-2">
+                                            ${renderStars(product.rating)}
+                                            <span class="text-gray-600 text-sm ml-2">${product.rating}</span>
+                                        </div>
+                                        <p class="text-indigo-600 font-bold">$${product.price.toFixed(2)}</p>
+                                        <a href="${product.link}" target="_blank" rel="noopener noreferrer" class="block mt-2 w-full bg-indigo-50 text-indigo-600 py-1 rounded hover:bg-indigo-100 transition text-sm text-center">
+                                            View on Amazon
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                });
+                
+                // Generate special offers
+                const offersContainer = document.getElementById('special-offers');
+                offersContainer.innerHTML = '';
+                
+                if (offers[budget]) {
+                    offers[budget].forEach(offer => {
+                        offersContainer.innerHTML += `
+                            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <div class="bg-indigo-100 text-indigo-800 p-2 rounded-full mr-3">
+                                        <i class="fas fa-gift"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">${offer}</p>
+                                        <button class="text-indigo-600 text-sm mt-1 hover:underline">Claim offer</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Age-based recommendations
+                if (age < 25) {
+                    offersContainer.innerHTML += `
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                            <p class="font-medium text-yellow-800">Student Discount Available!</p>
+                            <p class="text-sm text-yellow-700">Get an extra 10% off with your student ID</p>
+                        </div>
+                    `;
+                } else if (age > 50) {
+                    offersContainer.innerHTML += `
+                        <div class="bg-purple-50 border-l-4 border-purple-400 p-4 rounded-lg">
+                            <p class="font-medium text-purple-800">Senior Discount Week!</p>
+                            <p class="text-sm text-purple-700">15% off all purchases this week</p>
+                        </div>
+                    `;
+                }
+                
+                // Show recommendations
+                profileForm.classList.add('hidden');
+                recommendations.classList.remove('hidden');
+            });
+            
+            // Reset button
+            document.getElementById('reset-btn').addEventListener('click', function() {
+                form.reset();
+                recommendations.classList.add('hidden');
+                profileForm.classList.remove('hidden');
+                window.scrollTo(0, 0);
+            });
+            
+            // Helper function to render star ratings
+            function renderStars(rating) {
+                let stars = '';
+                const fullStars = Math.floor(rating);
+                const hasHalfStar = rating % 1 >= 0.5;
+                
+                for (let i = 0; i < fullStars; i++) {
+                    stars += '<i class="fas fa-star text-yellow-400"></i>';
+                }
+                
+                if (hasHalfStar) {
+                    stars += '<i class="fas fa-star-half-alt text-yellow-400"></i>';
+                }
+                
+                const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+                for (let i = 0; i < emptyStars; i++) {
+                    stars += '<i class="far fa-star text-yellow-400"></i>';
+                }
+                
+                return stars;
+            }
+        });
+    </script>
+</body>
+</html>
